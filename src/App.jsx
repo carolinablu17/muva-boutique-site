@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 
-/* ---------- Muva wordmark (SVG) ---------- */
+/* ========== Wordmark ========== */
 function LogoMuva({ width = 160, emerald = "var(--color-emerald, #047857)", purple = "var(--color-purple, #6d28d9)" }) {
   return (
     <svg width={width} viewBox="0 0 560 120" role="img" aria-label="muva wordmark" xmlns="http://www.w3.org/2000/svg">
@@ -16,7 +16,7 @@ function LogoMuva({ width = 160, emerald = "var(--color-emerald, #047857)", purp
   );
 }
 
-/* ---------- Filters hook ---------- */
+/* ========== Utilities ========== */
 function useFilters(items) {
   const [q, setQ] = useState("");
   const [size, setSize] = useState("");
@@ -34,8 +34,12 @@ function useFilters(items) {
   return { filtered, q, setQ, size, setSize, color, setColor };
 }
 
+const Card = ({ children, className = "" }) => (
+  <div className={`rounded-2xl border border-purple-200/60 bg-white/70 p-6 shadow-sm backdrop-blur ${className}`}>{children}</div>
+);
+
 const Badge = ({ children }) => (
-  <span className="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+  <span className="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-100 px-2 py-0.5 text-xs font-medium text-[--color-emerald-ink]">
     {children}
   </span>
 );
@@ -45,7 +49,11 @@ function SizeChip({ label, qty }) {
   return (
     <button
       disabled={sold}
-      className={`mr-2 mb-2 rounded-xl border px-3 py-1 text-sm transition ${sold ? "opacity-40 cursor-not-allowed" : "hover:shadow"}`}
+      className={`mr-2 mb-2 rounded-xl border px-3 py-1 text-sm transition
+        ${sold ? "opacity-40 cursor-not-allowed" : "hover:shadow border-purple-300 text-[--color-purple-ink]"}
+      `}
+      aria-disabled={sold}
+      aria-label={sold ? `Size ${label} sold out` : `Select size ${label}`}
       title={sold ? "Sold out" : `Size ${label}`}
     >
       {label}
@@ -53,13 +61,14 @@ function SizeChip({ label, qty }) {
   );
 }
 
+/* ========== Product Card ========== */
 function ProductCard({ p, onBook }) {
   const inStock = p.sizes?.some((s) => s.qty > 0);
   const availableSizes = p.sizes?.filter((s) => s.qty > 0) || [];
   return (
-    <div className="group rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden border border-purple-300 bg-white">
+    <div className="group overflow-hidden rounded-2xl border border-purple-300 bg-white shadow-sm transition hover:shadow-md">
       <div className="relative">
-        <img src={p.image} alt={p.name} className="h-72 w-full object-cover" />
+        <img src={p.image} alt={p.name} className="h-72 w-full object-cover" loading="lazy" />
         {!inStock && (
           <div className="absolute left-3 top-3">
             <span className="rounded-full bg-purple-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">SOLD OUT</span>
@@ -68,8 +77,8 @@ function ProductCard({ p, onBook }) {
       </div>
       <div className="p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-purple-800">{p.name}</h3>
-          <div className="text-sm text-emerald-800">${p.price}</div>
+          <h3 className="text-lg font-semibold text-[--color-purple-ink]">{p.name}</h3>
+          <div className="text-base font-semibold text-[--color-emerald-ink]">${p.price}</div>
         </div>
         <div className="mt-1 flex items-center gap-2">
           {(p.colors || []).map((c) => (
@@ -87,12 +96,12 @@ function ProductCard({ p, onBook }) {
         <div className="mt-4 flex items-center gap-2">
           <button
             onClick={() => onBook(p)}
-            className="rounded-2xl border border-emerald-700 bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800 hover:shadow"
+            className="rounded-2xl border border-emerald-700 bg-emerald-100 px-4 py-2 text-sm font-medium text-[--color-emerald-ink] transition hover:shadow"
           >
             Book a fitting
           </button>
           <span className="text-xs opacity-70">
-            {inStock ? `${availableSizes.length} size${availableSizes.length > 1 ? "s" : ""} in stock` : "No restock – join waitlist via booking"}
+            {inStock ? `${availableSizes.length} size${availableSizes.length > 1 ? "s" : ""} in stock` : "No restock — join waitlist via booking"}
           </span>
         </div>
       </div>
@@ -100,37 +109,60 @@ function ProductCard({ p, onBook }) {
   );
 }
 
+/* ========== Booking Modal ========== */
 function BookingModal({ open, onClose, product, calendlyUrl }) {
   if (!open) return null;
+  const hasCalendly = !!calendlyUrl;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-3xl rounded-2xl bg-white p-4 shadow-2xl">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-purple-800">Book a fitting</h2>
+            <h2 className="text-xl font-semibold text-[--color-purple-ink]">Book a fitting</h2>
             {product && <p className="text-sm opacity-70">for: {product.name}</p>}
           </div>
           <button onClick={onClose} className="rounded-full border px-3 py-1 text-sm">Close</button>
         </div>
-        <div className="aspect-video w-full overflow-hidden rounded-xl">
-          {/* Replace with your actual Calendly link */}
-          <iframe title="Booking" src={calendlyUrl} className="h-full w-full" frameBorder="0" />
-        </div>
+
+        {product && (
+          <div className="mb-3 flex items-center gap-3">
+            <img src={product.image} alt={product.name} className="h-12 w-12 rounded object-cover" />
+            <div className="text-sm text-[--color-purple-ink]">{product.name}</div>
+          </div>
+        )}
+
+        {hasCalendly ? (
+          <>
+            <div className="aspect-video w-full overflow-hidden rounded-xl">
+              <iframe title="Booking" src={calendlyUrl} className="h-full w-full" frameBorder="0" />
+            </div>
+            <a href={calendlyUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block rounded-2xl bg-purple-700 px-4 py-2 text-white font-semibold">
+              Open Calendly
+            </a>
+          </>
+        ) : (
+          <div className="rounded-xl border border-purple-200 bg-white/70 p-4 text-sm text-[--color-purple-ink]">
+            Add your Calendly link in <code>public/settings.json</code> to enable booking.
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ContactSection() {
+/* ========== Contact ========== */
+function ContactSection({ formspreeId }) {
   const [status, setStatus] = useState("idle");
   const [form, setForm] = useState({ name: "", email: "", message: "", _gotcha: "" });
+  const enabled = !!formspreeId;
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!enabled) return;
     if (form._gotcha) return;
     setStatus("submitting");
     try {
-      const endpoint = "https://formspree.io/f/YOUR_FORM_ID"; // <- replace with your Formspree ID
+      const endpoint = `https://formspree.io/f/${formspreeId}`;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,48 +171,105 @@ function ContactSection() {
       if (!res.ok) throw new Error("Network error");
       setStatus("success");
       setForm({ name: "", email: "", message: "", _gotcha: "" });
-    } catch (err) {
+    } catch {
       setStatus("error");
     }
   }
 
   return (
     <section id="contact" className="mx-auto max-w-4xl px-4 py-10">
-      <div className="rounded-2xl border border-purple-300 bg-white/70 p-6 shadow-sm">
-        <h3 className="text-2xl font-semibold text-emerald-700">Contact Us</h3>
-        <p className="mt-2 text-sm opacity-80">Have a question about sizing, availability, or fittings? Send us a note.</p>
-        <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
-          <input type="text" required placeholder="Your name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="rounded-xl border px-3 py-2 text-sm" />
-          <input type="email" required placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className="rounded-xl border px-3 py-2 text-sm" />
-          <textarea required rows={4} placeholder="How can we help?" value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} className="rounded-xl border px-3 py-2 text-sm" />
+      <Card>
+        <h3 className="text-2xl font-semibold text-[--color-emerald-ink]">Contact Us</h3>
+        <p className="mt-2 text-sm text-[--color-purple-ink]/80">
+          Have a question about sizing, availability, or fittings? Send us a note.
+        </p>
+
+        {!enabled && (
+          <div className="mt-3 rounded-xl border border-purple-200 bg-white/70 p-3 text-sm text-[--color-purple-ink]">
+            Add your Formspree ID in <code>public/settings.json</code> to enable this form.
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-4 grid gap-3" aria-disabled={!enabled}>
+          <input
+            type="text"
+            required
+            placeholder="Your name"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            className="rounded-xl border px-3 py-2 text-sm"
+            disabled={!enabled}
+          />
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            className="rounded-xl border px-3 py-2 text-sm"
+            disabled={!enabled}
+          />
+          <textarea
+            required
+            rows={4}
+            placeholder="How can we help?"
+            value={form.message}
+            onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+            className="rounded-xl border px-3 py-2 text-sm"
+            disabled={!enabled}
+          />
           <input type="text" tabIndex="-1" autoComplete="off" value={form._gotcha} onChange={(e) => setForm((f) => ({ ...f, _gotcha: e.target.value }))} className="hidden" />
-          <button type="submit" disabled={status === "submitting"} className="rounded-2xl border border-purple-700 bg-purple-100 px-4 py-2 text-sm font-medium text-purple-800 hover:shadow disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={!enabled || status === "submitting"}
+            className="rounded-2xl border border-purple-700 bg-purple-100 px-4 py-2 text-sm font-medium text-[--color-purple-ink] hover:shadow disabled:opacity-60"
+          >
             {status === "submitting" ? "Sending…" : "Send message"}
           </button>
-          {status === "success" && <div className="rounded-xl bg-green-50 p-3 text-sm text-emerald-800">Thanks! We’ll be in touch shortly.</div>}
+          {status === "success" && <div className="rounded-xl bg-green-50 p-3 text-sm text-[--color-emerald-ink]">Thanks! We’ll be in touch shortly.</div>}
           {status === "error" && <div className="rounded-xl bg-red-50 p-3 text-sm">Something went wrong. Please try again.</div>}
         </form>
-      </div>
+      </Card>
     </section>
   );
 }
 
+/* ========== Page ========== */
 export default function App() {
   const [items, setItems] = useState([]);
+  const [settings, setSettings] = useState({ calendlyUrl: "", formspreeId: "" });
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Load both catalog and settings.json at runtime (no-code updates)
   useEffect(() => {
-    const url = `${import.meta.env.BASE_URL}catalog.json`;
+    const base = import.meta.env.BASE_URL || "/";
+    const catalogURL = `${base}catalog.json`;
+    const settingsURL = `${base}settings.json?ts=${Date.now()}`; // bypass cache when you edit
+
     (async () => {
       try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const [catRes, setRes] = await Promise.all([
+          fetch(catalogURL, { cache: "no-store" }),
+          fetch(settingsURL, { cache: "no-store" })
+        ]);
+
+        if (!catRes.ok) throw new Error(`catalog HTTP ${catRes.status}`);
+        const data = await catRes.json();
         setItems(Array.isArray(data) ? data : []);
-      } catch (e) {
+
+        if (setRes.ok) {
+          const conf = await setRes.json();
+          setSettings({
+            calendlyUrl: typeof conf.calendlyUrl === "string" ? conf.calendlyUrl : "",
+            formspreeId: typeof conf.formspreeId === "string" ? conf.formspreeId : ""
+          });
+        } else {
+          setSettings({ calendlyUrl: "", formspreeId: "" });
+        }
+      } catch {
         setError("Using fallback catalog. Upload /public/catalog.json to control inventory.");
         setItems([]);
       } finally {
@@ -193,32 +282,43 @@ export default function App() {
   const allSizes = Array.from(new Set(items.flatMap((p) => (p.sizes || []).map((s) => s.label))));
   const allColors = Array.from(new Set(items.flatMap((p) => p.colors || [])));
 
-  const calendlyUrl = "https://calendly.com/your-org/30min?hide_gdpr_banner=1"; // replace when ready
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[--color-emerald] via-white to-[--color-purple]">
-      <header className="sticky top-0 z-40 backdrop-blur bg-white/70">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex justify-between items-center">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <LogoMuva width={160} />
-          <nav className="flex items-center gap-4 text-sm">
-            <a href="#catalog" className="hover:underline">Dresses</a>
-            <a href="#policies" className="hover:underline">Policies</a>
-            <a href="#contact" className="hover:underline">Contact</a>
-            <button onClick={() => { setSelected(null); setModalOpen(true); }} className="rounded-2xl border border-purple-700 px-3 py-1.5 hover:shadow">
+          <nav className="flex items-center gap-5 text-sm font-medium text-[--color-purple-ink]">
+            <a className="hover:underline underline-offset-4" href="#catalog">Dresses</a>
+            <a className="hover:underline underline-offset-4" href="#policies">Policies</a>
+            <a className="hover:underline underline-offset-4" href="#contact">Contact</a>
+            <button
+              onClick={() => { setSelected(null); setModalOpen(true); }}
+              className="rounded-2xl bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
+            >
               Book now
             </button>
           </nav>
         </div>
       </header>
 
+      {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div>
-            <h2 className="text-3xl md:text-4xl font-extrabold leading-tight text-purple-900">Fun & elegant looks for unforgettable moments</h2>
-            <p className="mt-3 text-base opacity-80">Limited sizes. No restocks. When it’s gone, it’s gone.</p>
-            <div className="mt-5 flex gap-3">
-              <a href="#catalog" className="rounded-2xl border px-4 py-2 hover:shadow">Shop dresses</a>
-              <button onClick={() => setModalOpen(true)} className="rounded-2xl border px-4 py-2 hover:shadow">Book a fitting</button>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-[--color-purple-ink]">
+              Fun & elegant looks for unforgettable moments
+            </h2>
+            <p className="mt-4 max-w-prose text-base md:text-lg text-[--color-purple-ink]/80">
+              Limited sizes. No restocks. When it’s gone, it’s gone.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href="#catalog" className="rounded-2xl border border-purple-700/30 bg-white/70 px-5 py-2.5 text-sm font-medium text-[--color-purple-ink] transition hover:shadow">
+                Shop dresses
+              </a>
+              <button onClick={() => setModalOpen(true)} className="rounded-2xl bg-purple-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow">
+                Book a fitting
+              </button>
             </div>
             {error && <div className="mt-4 text-xs text-red-700">{error}</div>}
           </div>
@@ -232,8 +332,9 @@ export default function App() {
         </div>
       </section>
 
+      {/* Filters */}
       <section className="mx-auto max-w-6xl px-4">
-        <div className="rounded-2xl border bg-white/60 p-4 shadow-sm">
+        <Card>
           <div className="grid gap-3 md:grid-cols-3">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search styles" className="rounded-xl border px-3 py-2 text-sm" />
             <select value={size} onChange={(e) => setSize(e.target.value)} className="rounded-xl border px-3 py-2 text-sm">
@@ -249,12 +350,13 @@ export default function App() {
               ))}
             </select>
           </div>
-        </div>
+        </Card>
       </section>
 
+      {/* Catalog */}
       <section id="catalog" className="mx-auto max-w-6xl px-4 py-8">
         {loading ? (
-          <div className="rounded-2xl border bg-white/60 p-6 text-center text-sm">Loading dresses…</div>
+          <Card className="text-center text-sm">Loading dresses…</Card>
         ) : (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -263,16 +365,25 @@ export default function App() {
               ))}
             </div>
             {filtered.length === 0 && (
-              <div className="mt-8 rounded-2xl border bg-white/60 p-6 text-center text-sm opacity-70">No dresses match your filters.</div>
+              <div className="mt-8 rounded-2xl border border-purple-200 bg-white/70 p-8 text-center">
+                <p className="font-semibold text-[--color-purple-ink]">No matches right now.</p>
+                <p className="mt-2 text-sm text-[--color-purple-ink]/70">
+                  Try clearing filters — or{" "}
+                  <button onClick={() => setModalOpen(true)} className="underline underline-offset-4">
+                    book a styling session
+                  </button>.
+                </p>
+              </div>
             )}
           </>
         )}
       </section>
 
+      {/* Policies */}
       <section id="policies" className="mx-auto max-w-4xl px-4 py-10">
-        <div className="rounded-2xl border border-emerald-300 bg-white/70 p-6 shadow-sm">
-          <h3 className="text-2xl font-semibold text-purple-700">Boutique Policies</h3>
-          <ul className="mt-4 list-disc space-y-2 pl-6 text-sm text-emerald-900">
+        <Card className="border-emerald-300">
+          <h3 className="text-2xl font-semibold text-[--color-purple-ink]">Boutique Policies</h3>
+          <ul className="mt-4 list-disc space-y-2 pl-6 text-sm text-[--color-emerald-ink]">
             <li>Appointments required. Please arrive on time.</li>
             <li>Sizing & alterations guidance offered; tailoring not included.</li>
             <li>Final sale; exchanges within 7 days if unworn with tags.</li>
@@ -280,25 +391,38 @@ export default function App() {
             <li>Payment: all major cards, sales tax applies.</li>
             <li>Please cancel/reschedule appointments 24 hours in advance.</li>
           </ul>
-        </div>
+        </Card>
       </section>
 
-      <ContactSection />
+      {/* Contact */}
+      <ContactSection formspreeId={settings.formspreeId} />
 
+      {/* Footer */}
       <footer className="mt-12 border-t bg-white/60">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-sm">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="opacity-70">© {new Date().getFullYear()} muva boutique</div>
-            <div className="flex gap-4">
-              <a href="#catalog" className="hover:underline">Dresses</a>
-              <a href="#policies" className="hover:underline">Policies</a>
-              <a href="#contact" className="hover:underline">Contact</a>
+        <div className="mx-auto max-w-6xl px-4 py-10 text-sm">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <div className="font-semibold text-[--color-purple-ink]">Muva Boutique</div>
+              <div className="mt-2 text-[--color-purple-ink]/70">123 Market St, Suite 200 · Your City</div>
+              <div className="text-[--color-purple-ink]/70">Tue–Sat 10–6</div>
+            </div>
+            <div>
+              <div className="font-semibold text-[--color-purple-ink]">Contact</div>
+              <div className="mt-2 text-[--color-purple-ink]/70">hello@shopmuva.com · (555) 123-4567</div>
+            </div>
+            <div>
+              <div className="font-semibold text-[--color-purple-ink]">Follow</div>
+              <div className="mt-2 flex gap-3 text-[--color-purple-ink]/70">
+                <a href="#" className="hover:underline">Instagram</a>
+                <a href="#" className="hover:underline">Facebook</a>
+              </div>
             </div>
           </div>
         </div>
       </footer>
 
-      <BookingModal open={modalOpen} onClose={() => setModalOpen(false)} product={selected} calendlyUrl={calendlyUrl} />
+      {/* Booking modal uses settings.calendlyUrl */}
+      <BookingModal open={modalOpen} onClose={() => setModalOpen(false)} product={selected} calendlyUrl={settings.calendlyUrl} />
     </div>
   );
 }
