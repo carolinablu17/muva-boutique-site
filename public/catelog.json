@@ -1,0 +1,25 @@
+[
+  {
+    "id": "mb-101",
+    "name": "Celeste Pleated Midi",
+    "colors": ["champagne", "navy"],
+    "price": 199,
+    "sizes": [
+      { "label": "4", "qty": 2 },
+      { "label": "6", "qty": 1 },
+      { "label": "8", "qty": 0 }
+    ],
+    "image": "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop"
+  },
+  {
+    "id": "mb-102",
+    "name": "Vivienne Lace Gown",
+    "colors": ["slate"],
+    "price": 289,
+    "sizes": [
+      { "label": "10", "qty": 1 },
+      { "label": "12", "qty": 1 }
+    ],
+    "image": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1400&auto=format&fit=crop"
+  }
+]

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-emerald: #047857;
+  --color-purple: #6d28d9;
+}
